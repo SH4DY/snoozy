@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -22,6 +24,7 @@ import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.github.amlcurran.showcaseview.targets.Target;
 import com.github.amlcurran.showcaseview.targets.ViewTarget;
+import com.shady.adapters.SeminarAdapter;
 import com.shady.listener.SwipeDismissListViewTouchListener;
 import com.shady.logic.Constants;
 import com.shady.logic.Seminar;
@@ -36,7 +39,7 @@ import java.util.UUID;
 public class Main extends Activity {
 
     Activity mActivity;
-    ListView lv;
+    //ListView lv;
     List<Seminar> seminarList = new ArrayList<Seminar>();
     ArrayAdapter adapter;
     FloatingActionButton fab;
@@ -104,7 +107,6 @@ public class Main extends Activity {
                     .setStyle(R.style.TutorialStyle1)
                     .build();
             displayedTutorialView.setButtonPosition(tutButtonLayout);
-
         }
     }
 
@@ -175,7 +177,6 @@ public class Main extends Activity {
 
                 // create alert dialog
                 AlertDialog alertDialog = alertDialogBuilder.create();
-
                 // show it
                 alertDialog.show();
             }
@@ -183,7 +184,6 @@ public class Main extends Activity {
     }
 
     private void updateSeminarList() {
-        lv = (ListView) findViewById(R.id.list_units);
         final SharedPreferences pref = getPreferences(0);
         seminarList.clear();
 
@@ -198,135 +198,143 @@ public class Main extends Activity {
             seminarList.add(seminar);
         }
 
-        if (adapter == null) {
-            adapter = new ArrayAdapter<Seminar>(this, R.layout.item_seminar, seminarList);
-            lv.setAdapter(adapter);
+        //_____________
+
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+
+        RecyclerView.Adapter adapter = new SeminarAdapter(seminarList);
+        recyclerView.setAdapter(adapter);
+
+        //______________
 
 
             //Single click ot enter detailed SeminarView
-            lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Seminar seminar = seminarList.get(position);
-                    Intent intent = new Intent(view.getContext(), SeminarView.class);
-                    intent.putExtra(Constants.KEY_SEMINAR_ID, seminar.getId().toString());
-
-                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(mActivity, findViewById(R.id.list_units), "list");
-                    startActivity(intent, options.toBundle());
-                }
-            });
-
-            //Longclick to EDIT seminars
-            lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-                @Override
-                public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-                    LayoutInflater li = LayoutInflater.from(mActivity);
-                    View promptsView = li.inflate(R.layout.seminar_prompt, null);
-
-                    final Seminar seminar = seminarList.get(position);
-
-                    final EditText userInput = (EditText) promptsView
-                            .findViewById(R.id.editTextDialogUserInput);
-
-                    final NumberPicker picker = (NumberPicker) promptsView.findViewById(R.id.numberPicker);
-                    picker.setMaxValue(20);
-                    picker.setMinValue(0);
-
-                    final SharedPreferences prefs = getSharedPreferences(seminar.getId().toString(), 0);
-                    userInput.setText(prefs.getString(Constants.KEY_SEMINAR_NAME, ""));
-
-                    picker.setValue(prefs.getInt(Constants.KEY_ALLOWED_TO_MISS_VALUE, 0));
-                    AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-                    builder
-                            .setView(promptsView)
-                            .setNegativeButton("Abbrechen", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                }
-                            })
-                            .setPositiveButton("Speichern", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                    SharedPreferences.Editor editor = prefs.edit();
-                                    editor.remove(Constants.KEY_SEMINAR_NAME);
-                                    editor.commit();
-
-                                    seminar.setName(userInput.getText().toString());
-                                    editor.putString(Constants.KEY_SEMINAR_NAME, seminar.getName());
-                                    editor.commit();
-
-                                    editor.remove(Constants.KEY_ALLOWED_TO_MISS_VALUE);
-                                    editor.commit();
-
-                                    seminar.setAllowedToMiss(picker.getValue());
-                                    editor.putInt(Constants.KEY_ALLOWED_TO_MISS_VALUE, seminar.getAllowedToMiss());
-                                    editor.commit();
-
-                                    updateSeminarList();
-                                }
-                            })
-                            .create().show();
-
-                    return false;
-                }
-            });
-
-            SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(lv, new SwipeDismissListViewTouchListener.DismissCallbacks() {
-                @Override
-                public boolean canDismiss(int position) {
-                    return true;
-                }
-
-                @Override
-                public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-                    builder
-                            .setMessage("Wirklich löschen?")
-                            .setTitle("Sicher?")
-                            .setCancelable(false)
-                            .setPositiveButton("Ja, löschen!", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    for (int x : reverseSortedPositions) {
-                                        Seminar semToRemove = seminarList.remove(x);
-                                        //Remove mSeminar from main shared preferences
-                                        SharedPreferences prefs = getPreferences(0);
-                                        SharedPreferences.Editor editor = prefs.edit();
-
-                                        HashSet<String> seminarSet = (HashSet<String>) prefs.getStringSet(Constants.KEY_SEMINAR_LIST, new HashSet<String>());
-
-                                        for (String s : seminarSet) {
-                                            if (semToRemove.getId().toString().equals(s)) {
-                                                seminarSet.remove(s);
-                                                break;
-                                            }
-                                        }
-                                        editor.remove(Constants.KEY_SEMINAR_LIST).commit();
-                                        editor.putStringSet(Constants.KEY_SEMINAR_LIST, seminarSet);
-                                        editor.commit();
-
-                                        //Clear mSeminar shared pref file
-                                        prefs = getSharedPreferences(semToRemove.getId().toString(), 0);
-                                        prefs.edit().clear().commit();
-                                        adapter.notifyDataSetChanged();
-                                    }
-                                }
-                            })
-                            .setNegativeButton("Abbrechen", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    adapter.notifyDataSetChanged();
-                                }
-                            }).create().show();
-                }
-            });
-
-            lv.setOnTouchListener(touchListener);
-            lv.setOnScrollListener(touchListener.makeScrollListener());
-        }
-        adapter.notifyDataSetChanged();
+//            lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//                @Override
+//                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                    Seminar seminar = seminarList.get(position);
+//                    Intent intent = new Intent(view.getContext(), SeminarView.class);
+//                    intent.putExtra(Constants.KEY_SEMINAR_ID, seminar.getId().toString());
+//
+//                    ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(mActivity, findViewById(R.id.list_units), "list");
+//                    startActivity(intent, options.toBundle());
+//                }
+//            });
+//
+//            //Longclick to EDIT seminars
+//            lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+//                @Override
+//                public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+//                    LayoutInflater li = LayoutInflater.from(mActivity);
+//                    View promptsView = li.inflate(R.layout.seminar_prompt, null);
+//
+//                    final Seminar seminar = seminarList.get(position);
+//
+//                    final EditText userInput = (EditText) promptsView
+//                            .findViewById(R.id.editTextDialogUserInput);
+//
+//                    final NumberPicker picker = (NumberPicker) promptsView.findViewById(R.id.numberPicker);
+//                    picker.setMaxValue(20);
+//                    picker.setMinValue(0);
+//
+//                    final SharedPreferences prefs = getSharedPreferences(seminar.getId().toString(), 0);
+//                    userInput.setText(prefs.getString(Constants.KEY_SEMINAR_NAME, ""));
+//
+//                    picker.setValue(prefs.getInt(Constants.KEY_ALLOWED_TO_MISS_VALUE, 0));
+//                    AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+//                    builder
+//                            .setView(promptsView)
+//                            .setNegativeButton("Abbrechen", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//                                }
+//                            })
+//                            .setPositiveButton("Speichern", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//
+//                                    SharedPreferences.Editor editor = prefs.edit();
+//                                    editor.remove(Constants.KEY_SEMINAR_NAME);
+//                                    editor.commit();
+//
+//                                    seminar.setName(userInput.getText().toString());
+//                                    editor.putString(Constants.KEY_SEMINAR_NAME, seminar.getName());
+//                                    editor.commit();
+//
+//                                    editor.remove(Constants.KEY_ALLOWED_TO_MISS_VALUE);
+//                                    editor.commit();
+//
+//                                    seminar.setAllowedToMiss(picker.getValue());
+//                                    editor.putInt(Constants.KEY_ALLOWED_TO_MISS_VALUE, seminar.getAllowedToMiss());
+//                                    editor.commit();
+//
+//                                    updateSeminarList();
+//                                }
+//                            })
+//                            .create().show();
+//
+//                    return false;
+//                }
+//            });
+//
+//            SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(lv, new SwipeDismissListViewTouchListener.DismissCallbacks() {
+//                @Override
+//                public boolean canDismiss(int position) {
+//                    return true;
+//                }
+//
+//                @Override
+//                public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
+//
+//                    AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+//                    builder
+//                            .setMessage("Wirklich löschen?")
+//                            .setTitle("Sicher?")
+//                            .setCancelable(false)
+//                            .setPositiveButton("Ja, löschen!", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//                                    for (int x : reverseSortedPositions) {
+//                                        Seminar semToRemove = seminarList.remove(x);
+//                                        //Remove mSeminar from main shared preferences
+//                                        SharedPreferences prefs = getPreferences(0);
+//                                        SharedPreferences.Editor editor = prefs.edit();
+//
+//                                        HashSet<String> seminarSet = (HashSet<String>) prefs.getStringSet(Constants.KEY_SEMINAR_LIST, new HashSet<String>());
+//
+//                                        for (String s : seminarSet) {
+//                                            if (semToRemove.getId().toString().equals(s)) {
+//                                                seminarSet.remove(s);
+//                                                break;
+//                                            }
+//                                        }
+//                                        editor.remove(Constants.KEY_SEMINAR_LIST).commit();
+//                                        editor.putStringSet(Constants.KEY_SEMINAR_LIST, seminarSet);
+//                                        editor.commit();
+//
+//                                        //Clear mSeminar shared pref file
+//                                        prefs = getSharedPreferences(semToRemove.getId().toString(), 0);
+//                                        prefs.edit().clear().commit();
+//                                        adapter.notifyDataSetChanged();
+//                                    }
+//                                }
+//                            })
+//                            .setNegativeButton("Abbrechen", new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialog, int which) {
+//                                    adapter.notifyDataSetChanged();
+//                                }
+//                            }).create().show();
+//                }
+//            });
+//
+//            lv.setOnTouchListener(touchListener);
+//            lv.setOnScrollListener(touchListener.makeScrollListener());
+//        }
+//        adapter.notifyDataSetChanged();
     }
 
 //    @Override

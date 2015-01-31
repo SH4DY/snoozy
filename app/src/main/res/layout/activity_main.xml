@@ -20,12 +20,13 @@
         android:textColor="@android:color/black"
         android:text="@string/main_title" />
 
-    <ListView
-        android:id="@+id/list_units"
-        android:transitionName="list"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tv_title"/>
+        android:scrollbars="vertical"
+        />
+
 
     <com.getbase.floatingactionbutton.AddFloatingActionButton
         android:id="@+id/fab"
