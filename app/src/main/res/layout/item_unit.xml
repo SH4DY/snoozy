@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:textSize="18sp"
+        android:id="@+id/column_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:textColor="@android:color/black"
+        />
+
+    <TextView
+        android:textSize="18sp"
+        android:id="@+id/column_attendance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_centerVertical="true"
+        android:textColor="@android:color/black"
+        />
+
+    <TextView
+        android:text="@string/unit_snoozed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@id/checkbox"
+        android:layout_marginEnd="8dp"
+        android:layout_centerVertical="true"
+        android:textColor="@android:color/black"
+        />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/checkbox"
+        android:checked="false"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:scaleX="1.5"
+        android:scaleY="1.5"
+        />
+</RelativeLayout>

@@ -1,0 +1,33 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat">
+
+        <item name="colorPrimary">@color/primary_blue</item>
+        <item name="colorPrimaryDark">@color/primary_blue_darker</item>
+        <item name="colorAccent">@color/accent</item>
+        <item name="android:windowBackground">@color/window_background</item>
+
+    </style>
+
+    <style name="TutorialStyle1" parent="ShowcaseView.Light">
+        <item name="sv_backgroundColor">#90424242</item>
+        <item name="sv_showcaseColor">@color/primary_blue_darker</item>
+        <item name="sv_buttonText">Okay</item>
+        <item name="sv_titleTextAppearance">@style/CustomTitleText</item>
+        <item name="sv_detailTextAppearance">@style/CustomDetailText</item>
+    </style>
+
+    <style name="CustomTitleText" parent="TextAppearance.ShowcaseView.Title">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:layout_marginTop">250dp</item>
+    </style>
+
+
+    <style name="CustomDetailText" parent="TextAppearance.ShowcaseView.Detail">
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:layout_marginTop">250dp</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:layout_centerVertical">true</item>
+    </style>
+</resources>

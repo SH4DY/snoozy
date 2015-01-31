@@ -1,0 +1,2 @@
+include ':app', ':showcaseview_lib'
+project(':showcaseview_lib').projectDir = new File('libs/showcaseview_lib')
